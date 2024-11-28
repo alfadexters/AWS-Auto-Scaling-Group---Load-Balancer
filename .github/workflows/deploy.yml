@@ -12,9 +12,15 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: List files after checkout
+      run: ls -la
 
     - name: Build Docker image
       run: docker build -t my-website .
+      working-directory: .
 
     - name: Deploy to EC2
       env:
@@ -25,4 +31,3 @@ jobs:
         ssh -o StrictHostKeyChecking=no -i private_key.pem ubuntu@98.81.243.60 "mkdir -p /home/ubuntu/my-website"
         scp -o StrictHostKeyChecking=no -i private_key.pem docker-compose.yml ubuntu@98.81.243.60:/home/ubuntu/my-website/docker-compose.yml
         ssh -o StrictHostKeyChecking=no -i private_key.pem ubuntu@98.81.243.60 "cd /home/ubuntu/my-website && docker-compose down && docker-compose up -d"
-

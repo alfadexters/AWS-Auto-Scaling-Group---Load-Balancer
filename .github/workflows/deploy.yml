@@ -22,6 +22,5 @@ jobs:
       run: |
         echo "$SSH_PRIVATE_KEY" > private_key.pem
         chmod 600 private_key.pem
-        scp -i private_key.pem docker-compose.yml ubuntu@98.81.243.60:/home/ubuntu/my-website/
-        ssh -i private_key.pem ubuntu@98.81.243.60 "cd /home/ubuntu/my-website && docker-compose down && docker-compose up -d"
-
+        scp -o StrictHostKeyChecking=no -i private_key.pem docker-compose.yml ubuntu@98.81.243.60:/home/ubuntu/my-website/
+        ssh -o StrictHostKeyChecking=no -i private_key.pem ubuntu@98.81.243.60 "cd /home/ubuntu/my-website && docker-compose down && docker-compose up -d"

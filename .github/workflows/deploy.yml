@@ -30,9 +30,13 @@ jobs:
         # Test SSH connection
         ssh -o StrictHostKeyChecking=no -i ec2_key.pem ubuntu@98.81.243.60 "echo Connected to EC2"
 
-        # Copy docker-compose.yml to EC2
+        # Copy Dockerfile and docker-compose.yml
         ssh -o StrictHostKeyChecking=no -i ec2_key.pem ubuntu@98.81.243.60 "mkdir -p /home/ubuntu/my-website"
+        scp -o StrictHostKeyChecking=no -i ec2_key.pem Dockerfile ubuntu@98.81.243.60:/home/ubuntu/my-website/
         scp -o StrictHostKeyChecking=no -i ec2_key.pem docker-compose.yml ubuntu@98.81.243.60:/home/ubuntu/my-website/
+
+        # List files to confirm
+        ssh -o StrictHostKeyChecking=no -i ec2_key.pem ubuntu@98.81.243.60 "ls -la /home/ubuntu/my-website"
 
         # Restart Docker Compose services
         ssh -o StrictHostKeyChecking=no -i ec2_key.pem ubuntu@98.81.243.60 << 'EOF'

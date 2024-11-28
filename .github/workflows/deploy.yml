@@ -8,7 +8,6 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
@@ -20,14 +19,24 @@ jobs:
 
     - name: Build Docker image
       run: docker build -t my-website .
-      working-directory: .
 
     - name: Deploy to EC2
       env:
         SSH_PRIVATE_KEY: ${{ secrets.AWS_SSH_KEY }}
       run: |
-        echo "$SSH_PRIVATE_KEY" > private_key.pem
-        chmod 600 private_key.pem
-        ssh -o StrictHostKeyChecking=no -i private_key.pem ubuntu@98.81.243.60 "mkdir -p /home/ubuntu/my-website"
-        scp -o StrictHostKeyChecking=no -i private_key.pem docker-compose.yml ubuntu@98.81.243.60:/home/ubuntu/my-website/docker-compose.yml
-        ssh -o StrictHostKeyChecking=no -i private_key.pem ubuntu@98.81.243.60 "cd /home/ubuntu/my-website && docker-compose down && docker-compose up -d"
+        echo "$SSH_PRIVATE_KEY" > ec2_key.pem
+        chmod 600 ec2_key.pem
+
+        # Test SSH connection
+        ssh -o StrictHostKeyChecking=no -i ec2_key.pem ubuntu@98.81.243.60 "echo Connected to EC2"
+
+        # Copy docker-compose.yml to EC2
+        ssh -o StrictHostKeyChecking=no -i ec2_key.pem ubuntu@98.81.243.60 "mkdir -p /home/ubuntu/my-website"
+        scp -o StrictHostKeyChecking=no -i ec2_key.pem docker-compose.yml ubuntu@98.81.243.60:/home/ubuntu/my-website/
+
+        # Restart Docker Compose services
+        ssh -o StrictHostKeyChecking=no -i ec2_key.pem ubuntu@98.81.243.60 << 'EOF'
+        cd /home/ubuntu/my-website
+        docker-compose down || true
+        docker-compose up -d
+        EOF

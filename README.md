@@ -4,7 +4,7 @@ This project uses GitHub Actions to automate the deployment of a web application
 
 ## Project Architecture
 
-![GitActionsAWS drawio](https://github.com/user-attachments/assets/36895de7-4a8d-4638-8568-9b801d181257)
+![GitActionsAWS](https://github.com/user-attachments/assets/66632f45-df57-4067-8a21-ee41ccb693d9)
 
 ## 🎥 Demonstration Video
 
@@ -94,7 +94,7 @@ jobs:
 
 1. **Clone this repository locally:**
    ```bash
-   git clone [<repository URL>](https://github.com/alfadexters/Website-GitActions.git)
+   git clone https://github.com/alfadexters/Website-GitActions.git
    ```
 
 2. **Set up your EC2 instance:**

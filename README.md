@@ -9,6 +9,7 @@ This project uses GitHub Actions to automate the deployment of a web application
 ## 🎥 Demonstration Video
 
 To see a demonstration of the project's functionality, check out the following video:
+
 [![Watch Demonstration](https://img.youtube.com/vi/TtX_Bu5HPEo/0.jpg)](https://www.youtube.com/watch?v=TtX_Bu5HPEo&ab_channel=RichardMacas)
 
 ## Features
@@ -93,7 +94,7 @@ jobs:
 
 1. **Clone this repository locally:**
    ```bash
-   git clone <repository URL>
+   git clone [<repository URL>](https://github.com/alfadexters/Website-GitActions.git)
    ```
 
 2. **Set up your EC2 instance:**
@@ -127,6 +128,3 @@ jobs:
 
 Contributions are welcome. If you encounter an issue or have suggestions to improve the project, feel free to create an issue or submit a pull request.
 
-## License
-
-This project is licensed under the MIT License. See the `LICENSE` file for more details.

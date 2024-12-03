@@ -10,20 +10,28 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. Checkout del código fuente
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # 2. Cerrar sesión previa (si hay)
+      - name: Log out previous sessions
+        run: docker logout ghcr.io || true
+
+      # 3. Iniciar sesión en GitHub Container Registry
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
-          username: ${{ secrets.DOCKERHUB_ACTOR }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          username: ${{ secrets.GHCR_ACTOR }}
+          password: ${{ secrets.GHCR_TOKEN }}
 
+      # 4. Construir la imagen Docker
       - name: Build Docker Image
         run: |
           docker build -t ghcr.io/${{ github.repository_owner }}/my-website:latest .
 
+      # 5. Empujar la imagen al registro
       - name: Push Docker Image
         run: |
           docker push ghcr.io/${{ github.repository_owner }}/my-website:latest
@@ -33,6 +41,7 @@ jobs:
     needs: build
 
     steps:
+      # 6. Conexión al servidor EC2
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v0.1.7
         with:
@@ -40,7 +49,11 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_KEY }}
           script: |
-            docker login ghcr.io -u ${{ secrets.DOCKERHUB_ACTOR }} -p ${{ secrets.DOCKERHUB_TOKEN }}
+            # Cerrar sesión previa y autenticar
+            docker logout ghcr.io || true
+            docker login ghcr.io -u ${{ secrets.GHCR_ACTOR }} -p ${{ secrets.GHCR_TOKEN }}
+            
+            # Descargar la nueva imagen y actualizar contenedor
             docker pull ghcr.io/${{ github.repository_owner }}/my-website:latest
             docker stop my-website || true
             docker rm my-website || true

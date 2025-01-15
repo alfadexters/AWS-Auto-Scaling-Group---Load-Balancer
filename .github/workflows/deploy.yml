@@ -3,7 +3,7 @@ name: Build and Deploy to QA and Main
 on:
   push:
     branches:
-      - QA
+      - qa
       - main
 
 jobs:

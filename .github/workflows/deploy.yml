@@ -61,12 +61,11 @@ jobs:
         uses: appleboy/ssh-action@v0.1.7
         with:
           host: ${{ secrets.MAIN_LB_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_KEY }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             docker login ghcr.io -u ${{ secrets.GHCR_ACTOR }} -p ${{ secrets.GHCR_TOKEN }}
             docker pull ghcr.io/${{ github.repository_owner }}/my-website:main
             docker stop my-website || true
             docker rm my-website || true
             docker run -d --name my-website -p 80:80 ghcr.io/${{ github.repository_owner }}/my-website:main
-

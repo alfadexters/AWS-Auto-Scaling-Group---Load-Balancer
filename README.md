@@ -1,130 +1,169 @@
-# Automatic Deployment Project with GitHub Actions and AWS EC2
+# **My Website: CI/CD Pipeline with GitHub Actions and AWS**
 
-This project uses GitHub Actions to automate the deployment of a web application on an AWS EC2 instance. The integration is designed to copy the code to the EC2 instance and deploy it using Docker Compose every time a push is made to the `main` branch.
+This repository contains the source code and CI/CD pipeline for deploying a containerized web application to **AWS EC2** instances in both QA and production (Main) environments. The production environment leverages **Auto Scaling Groups (ASG)** and **Load Balancer** for high availability and scalability.
 
-## Project Architecture
+---
 
-![GitActionsAWS](https://github.com/user-attachments/assets/66632f45-df57-4067-8a21-ee41ccb693d9)
+## **Features**
+- **CI/CD pipeline using GitHub Actions**:
+  - Automatic Docker image build and push to **GitHub Container Registry (GHCR)**.
+  - Deployment to **QA** environment using SSH.
+  - Deployment to **Production** via Auto Scaling Groups with a User Data Script.
+- **Scalable Production Environment**:
+  - Instances are automatically managed by AWS Auto Scaling Group.
+  - Load Balancer ensures traffic is distributed across healthy instances.
+- **High Availability**:
+  - New instances automatically pull the latest container image.
 
-## 🎥 Demonstration Video
+---
 
-To see a demonstration of the project's functionality, check out the following video:
+## **Architecture**
 
-[![Watch Demonstration](https://img.youtube.com/vi/TtX_Bu5HPEo/0.jpg)](https://www.youtube.com/watch?v=TtX_Bu5HPEo&ab_channel=RichardMacas)
+Below is the architecture of the project, showcasing the CI/CD pipeline and deployment setup:
 
-## Features
+![AwsGithubLBAS](https://github.com/user-attachments/assets/af3f71bf-94ef-4cd1-a202-c1fad25e9a0f)
 
-- Automated deployment to AWS EC2 upon changes in the `main` branch.
-- Docker Compose for building and running the application.
-- Secure configuration using GitHub secrets.
+---
 
-## Repository Structure
+## **Technologies Used**
+- **Docker**: Containerize the application.
+- **GitHub Actions**: Automate CI/CD pipeline.
+- **GitHub Container Registry (GHCR)**: Store and manage Docker images.
+- **AWS**: Hosting and infrastructure management.
+  - EC2 Instances
+  - Auto Scaling Group
+  - Application Load Balancer
 
+---
+
+## **Getting Started**
+
+### **Prerequisites**
+1. **GitHub Repository**:
+   - Create a GitHub repository and clone it to your local machine.
+2. **AWS Account**:
+   - Ensure you have an active AWS account and access to EC2, Auto Scaling, and Load Balancer services.
+3. **Docker**:
+   - Install Docker on your local machine.
+
+---
+
+### **Setting Up the Environments**
+
+#### **1. QA Environment**
+- Launch two EC2 instances for QA.
+- Install Docker on each instance:
+  ```bash
+  sudo yum update -y
+  sudo yum install -y docker
+  sudo service docker start
+  sudo usermod -aG docker ec2-user
+  ```
+- Add the public IPs of the instances as <QA_INSTANCE_1> and <QA_INSTANCE_2> secrets in the GitHub repository.
+  
+#### **2. Production Environment**
+- Create a Launch Template in AWS:
+ - Include the User Data Script for installing Docker, logging into GHCR, and running the container.
+ - Example User Data Script:
+```bash
+#!/bin/bash
+yum update -y
+yum install -y docker
+service docker start
+usermod -aG docker ec2-user
+docker login ghcr.io -u <GHCR_ACTOR> -p <GHCR_TOKEN>
+docker pull ghcr.io/<github_owner>/<repository>:main
+docker run -d --name my-website -p 80:80 ghcr.io/<github_owner>/<repository>:main
 ```
+ - Replace <GHCR_ACTOR> and <GHCR_TOKEN> with your GitHub credentials.
+- Create an Auto Scaling Group using the Launch Template.
+- Configure an Application Load Balancer:
+ - Set up health checks for your instances.
+
+
+---
+
+### **Pipeline Configuration**
+
+#### **GitHub Secrets**
+Add the following secrets to your GitHub repository:
+- `GHCR_ACTOR`: Your GitHub username.
+- `GHCR_TOKEN`: A GitHub personal access token with `write:packages` and `read:packages` permissions.
+- `QA_INSTANCE_1`: Public IP of the first QA instance.
+- `QA_INSTANCE_2`: Public IP of the second QA instance.
+- `EC2_USER`: The username for your EC2 instances (e.g., `ec2-user`).
+- `EC2_KEY`: Your private SSH key for accessing the EC2 instances.
+- `MAIN_LB_HOST`: The DNS name of your Load Balancer.
+
+---
+
+### **Pipeline Workflow**
+
+The GitHub Actions pipeline is defined in `.github/workflows/deploy.yml`:
+
+1. **Build and Push Docker Image**:
+   - Triggered on a push to `qa` or `main` branches.
+   - Builds a Docker image and pushes it to **GitHub Container Registry**.
+
+2. **Deploy to QA**:
+   - SSHs into two QA instances and deploys the Docker container.
+
+3. **Deploy to Main**:
+   - Updates the Docker image in **GitHub Container Registry**.
+   - Auto Scaling Group pulls the latest image when new instances are launched.
+
+---
+
+### **File Structure**
+
+```plaintext
 .
-├── Dockerfile               # Defines the Docker image for the application
-├── docker-compose.yml       # Docker Compose configuration for deployment
-├── app.js                   # Application source code
-├── index.html               # Main webpage of the application
-├── styles.css               # Application styling
-└── .github/workflows
-    └── deploy.yml           # GitHub Actions configuration for deployment
+├── .github/
+│   └── workflows/
+│       └── deploy.yml      # GitHub Actions pipeline
+├── app/                    # Application source code
+│   └── ...                 # Replace with your app's files
+├── Dockerfile              # Dockerfile for building the application image
+├── README.md               # Project documentation
 ```
+---
 
-## Prerequisites
+## **Usage**
 
-1. **EC2 Instance:** Ensure you have a properly configured EC2 instance accessible via SSH.
+1. **Push to QA Branch**:
+   - Push any changes to the `qa` branch to trigger the deployment to QA instances.
+   - Example:
+     ```bash
+     git checkout qa
+     git add .
+     git commit -m "Deploying to QA"
+     git push origin qa
+     ```
 
-2. **Docker and Docker Compose Setup:**
-   - Install Docker on your EC2 instance by following the [official documentation](https://docs.docker.com/engine/install/).
-   - Install Docker Compose as per the [official guide](https://docs.docker.com/compose/install/).
+2. **Push to Main Branch**:
+   - Push any changes to the `main` branch to trigger the deployment in production.
+   - Example:
+     ```bash
+     git checkout main
+     git add .
+     git commit -m "Deploying to Production"
+     git push origin main
+     ```
 
-3. **GitHub Secrets Configuration:**
-   Go to `Settings > Secrets and variables > Actions` in your repository and add the following secrets:
+---
 
-   - `EC2_HOST`: Public IP address of your EC2 instance.
-   - `EC2_USER`: SSH username (e.g., `ubuntu`).
-   - `EC2_KEY`: SSH private key for accessing the instance.
+## **Monitoring and Troubleshooting**
 
-## Workflow File Explanation (`.github/workflows/deploy.yml`)
+- **AWS Console**:
+  - Use the EC2 dashboard to check instance health.
+  - Check the Auto Scaling Group for instance scaling activities.
+  - Use the Load Balancer dashboard to monitor traffic distribution.
+- **GitHub Actions Logs**:
+  - View pipeline execution logs in the **Actions** tab of the repository.
 
-```yaml
-name: Deploy to EC2
+---
 
-on:
-  push:
-    branches:
-      - main
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
 
-      - name: Copy files to EC2
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_KEY }}
-          source: "."
-          target: "~/my-website"
-
-      - name: Deploy with Docker Compose
-        uses: appleboy/ssh-action@v0.1.7
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_KEY }}
-          script: |
-            cd ~/my-website
-            docker-compose up --build -d
-```
-
-### Workflow Steps
-
-1. **Checkout Code:** Pulls the latest code from the repository.
-2. **Copy Files to EC2:** Uses the `scp-action` to securely transfer files to the EC2 instance.
-3. **Deploy with Docker Compose:** Connects to the EC2 instance via SSH and executes Docker Compose to build and deploy the application.
-
-## Deployment Steps
-
-1. **Clone this repository locally:**
-   ```bash
-   git clone https://github.com/alfadexters/Website-GitActions.git
-   ```
-
-2. **Set up your EC2 instance:**
-   - Install Docker and Docker Compose.
-   - Ensure the application port (e.g., 80 or 3000) is open in the EC2 instance’s security group.
-
-3. **Add GitHub secrets to your repository.**
-
-4. **Push changes to the `main` branch:**
-   ```bash
-   git add .
-   git commit -m "Project update"
-   git push origin main
-   ```
-
-5. **Verify the deployment:**
-   Access your EC2 instance’s public IP address to ensure the application is running.
-
-## System Requirements
-
-- EC2 instance running Ubuntu or similar.
-- Docker version 20.10 or newer.
-- Docker Compose version 1.29 or newer.
-
-## Notes
-
-- Ensure your SSH private key does not have additional spaces or invalid characters.
-- For debugging GitHub Actions, check the workflow logs under the `Actions` tab in your repository.
-
-## Contributions
-
-Contributions are welcome. If you encounter an issue or have suggestions to improve the project, feel free to create an issue or submit a pull request.
 

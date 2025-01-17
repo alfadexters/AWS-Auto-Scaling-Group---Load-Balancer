@@ -57,16 +57,7 @@ jobs:
     if: github.ref_name == 'main'
 
     steps:
-      # 6. Deploy to Main Load Balancer
-      - name: Deploy to Main Load Balancer
-        uses: appleboy/ssh-action@v0.1.7
-        with:
-          host: ${{ secrets.MAIN_LB_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_KEY }}
-          script: |
-            docker login ghcr.io -u ${{ secrets.GHCR_ACTOR }} -p ${{ secrets.GHCR_TOKEN }}
-            docker pull ghcr.io/${{ github.repository_owner }}/my-website:main
-            docker stop my-website || true
-            docker rm my-website || true
-            docker run -d --name my-website -p 80:80 ghcr.io/${{ github.repository_owner }}/my-website:main
+      # 7. Update Main Image for Auto Scaling Group
+      - name: Update Main Docker Image for ASG
+        run: |
+          echo "The latest Docker image has been built and pushed to the registry. Auto Scaling Group will pull it automatically."
